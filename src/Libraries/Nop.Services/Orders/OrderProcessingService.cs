@@ -27,6 +27,7 @@ using Nop.Services.Logging;
 using Nop.Services.Messages;
 using Nop.Services.Payments;
 using Nop.Services.Security;
+using Nop.Services.Diagnostics;
 using Nop.Services.Shipping;
 using Nop.Services.Stores;
 using Nop.Services.Tax;
@@ -281,6 +282,7 @@ public partial class OrderProcessingService : IOrderProcessingService
     /// </returns>
     protected virtual async Task<PlaceOrderContainer> PreparePlaceOrderDetailsAsync(ProcessPaymentRequest processPaymentRequest)
     {
+        using var activity = NopCommerceDiagnostics.ActivitySource.StartActivity("ValidateOrderDetails");
         var details = new PlaceOrderContainer();
 
         var currentCurrency = await _workContext.GetWorkingCurrencyAsync();
@@ -717,6 +719,7 @@ public partial class OrderProcessingService : IOrderProcessingService
     protected virtual async Task<Order> SaveOrderDetailsAsync(ProcessPaymentRequest processPaymentRequest,
         ProcessPaymentResult processPaymentResult, PlaceOrderContainer details)
     {
+        using var activity = NopCommerceDiagnostics.ActivitySource.StartActivity("SaveOrder");
         var order = new Order
         {
             StoreId = processPaymentRequest.StoreId,
@@ -1275,6 +1278,7 @@ public partial class OrderProcessingService : IOrderProcessingService
     /// <returns>A task that represents the asynchronous operation</returns>
     protected virtual async Task MoveShoppingCartItemsToOrderItemsAsync(PlaceOrderContainer details, Order order)
     {
+        using var activity = NopCommerceDiagnostics.ActivitySource.StartActivity("MoveCartToOrderItems");
         foreach (var sc in details.Cart)
         {
             var product = await _productService.GetProductByIdAsync(sc.ProductId);
@@ -1566,6 +1570,9 @@ public partial class OrderProcessingService : IOrderProcessingService
     /// </returns>
     public virtual async Task<PlaceOrderResult> PlaceOrderAsync(ProcessPaymentRequest processPaymentRequest)
     {
+        using var activity = NopCommerceDiagnostics.ActivitySource.StartActivity("PlaceOrder");
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
         ArgumentNullException.ThrowIfNull(processPaymentRequest);
 
         if (processPaymentRequest.OrderGuid == Guid.Empty)
@@ -1650,7 +1657,11 @@ public partial class OrderProcessingService : IOrderProcessingService
         }
 
         if (!_orderSettings.PlaceOrderWithLock)
-            return await placeOrder(details);
+        {
+            var r = await placeOrder(details);
+            NopCommerceDiagnostics.OrderProcessingDuration.Record(stopwatch.Elapsed.TotalMilliseconds);
+            return r;
+        }
 
         PlaceOrderResult result;
         var resource = details.Customer.Id.ToString();
@@ -1688,6 +1699,7 @@ public partial class OrderProcessingService : IOrderProcessingService
             mutex.ReleaseMutex();
         }
 
+        NopCommerceDiagnostics.OrderProcessingDuration.Record(stopwatch.Elapsed.TotalMilliseconds);
         return result;
     }
 

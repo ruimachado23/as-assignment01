@@ -11,6 +11,7 @@ using Nop.Core.Domain.Stores;
 using Nop.Core.Infrastructure;
 using Nop.Data;
 using Nop.Services.Customers;
+using Nop.Services.Diagnostics;
 using Nop.Services.Localization;
 using Nop.Services.Messages;
 using Nop.Services.Security;
@@ -1699,6 +1700,10 @@ public partial class ProductService : IProductService
     /// <returns>A task that represents the asynchronous operation</returns>
     public virtual async Task AdjustInventoryAsync(Product product, int quantityToChange, string attributesXml = "", string message = "")
     {
+        using var activity = NopCommerceDiagnostics.ActivitySource.StartActivity("AdjustInventory");
+        activity?.SetTag("product_id", product?.Id);
+        activity?.SetTag("quantity_adjusted", quantityToChange);
+
         ArgumentNullException.ThrowIfNull(product);
 
         if (quantityToChange == 0)
