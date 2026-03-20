@@ -1571,6 +1571,7 @@ public partial class OrderProcessingService : IOrderProcessingService
     public virtual async Task<PlaceOrderResult> PlaceOrderAsync(ProcessPaymentRequest processPaymentRequest)
     {
         using var activity = NopCommerceDiagnostics.ActivitySource.StartActivity("PlaceOrder");
+        activity?.SetTag("payment_method", processPaymentRequest?.PaymentMethodSystemName);
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
         ArgumentNullException.ThrowIfNull(processPaymentRequest);
@@ -1659,7 +1660,11 @@ public partial class OrderProcessingService : IOrderProcessingService
         if (!_orderSettings.PlaceOrderWithLock)
         {
             var r = await placeOrder(details);
-            NopCommerceDiagnostics.OrderProcessingDuration.Record(stopwatch.Elapsed.TotalMilliseconds);
+            var status = r.Success ? "success" : "failure";
+            activity?.SetTag("status", status);
+            NopCommerceDiagnostics.OrderProcessingDuration.Record(stopwatch.Elapsed.TotalMilliseconds,
+                new KeyValuePair<string, object?>("payment_method", processPaymentRequest.PaymentMethodSystemName),
+                new KeyValuePair<string, object?>("status", status));
             return r;
         }
 
@@ -1699,7 +1704,11 @@ public partial class OrderProcessingService : IOrderProcessingService
             mutex.ReleaseMutex();
         }
 
-        NopCommerceDiagnostics.OrderProcessingDuration.Record(stopwatch.Elapsed.TotalMilliseconds);
+        var lockStatus = result.Success ? "success" : "failure";
+        activity?.SetTag("status", lockStatus);
+        NopCommerceDiagnostics.OrderProcessingDuration.Record(stopwatch.Elapsed.TotalMilliseconds,
+            new KeyValuePair<string, object?>("payment_method", processPaymentRequest.PaymentMethodSystemName),
+            new KeyValuePair<string, object?>("status", lockStatus));
         return result;
     }
 

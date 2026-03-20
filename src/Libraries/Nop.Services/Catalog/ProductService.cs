@@ -1709,6 +1709,9 @@ public partial class ProductService : IProductService
         if (quantityToChange == 0)
             return;
 
+        try
+        {
+
         if (product.ManageInventoryMethod == ManageInventoryMethod.ManageStock)
         {
             //update stock quantity
@@ -1795,8 +1798,19 @@ public partial class ProductService : IProductService
 
             //associated product (bundle)
             var associatedProduct = await GetProductByIdAsync(attributeValue.AssociatedProductId);
-            if (associatedProduct != null) 
+            if (associatedProduct != null)
                 await AdjustInventoryAsync(associatedProduct, quantityToChange * attributeValue.Quantity, message);
+        }
+        }
+        catch (Exception ex)
+        {
+            var reason = ex is NopException ? "out_of_stock" : "unknown";
+            activity?.SetTag("error", true);
+            activity?.SetTag("reason", reason);
+            NopCommerceDiagnostics.InventoryAdjustmentFailures.Add(1,
+                new KeyValuePair<string, object?>("product_id", product.Id),
+                new KeyValuePair<string, object?>("reason", reason));
+            throw;
         }
     }
 

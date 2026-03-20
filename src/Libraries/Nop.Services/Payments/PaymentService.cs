@@ -52,7 +52,9 @@ public partial class PaymentService : IPaymentService
     public virtual async Task<ProcessPaymentResult> ProcessPaymentAsync(ProcessPaymentRequest processPaymentRequest)
     {
         using var activity = NopCommerceDiagnostics.ActivitySource.StartActivity("ProcessPayment");
+        activity?.SetTag("payment_method", processPaymentRequest.PaymentMethodSystemName);
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        var status = "success";
 
         try
         {
@@ -79,9 +81,17 @@ public partial class PaymentService : IPaymentService
 
             return await paymentMethod.ProcessPaymentAsync(processPaymentRequest);
         }
+        catch
+        {
+            status = "failure";
+            throw;
+        }
         finally
         {
-            NopCommerceDiagnostics.PaymentGatewayDuration.Record(stopwatch.Elapsed.TotalMilliseconds);
+            activity?.SetTag("status", status);
+            NopCommerceDiagnostics.PaymentGatewayDuration.Record(stopwatch.Elapsed.TotalMilliseconds,
+                new KeyValuePair<string, object?>("payment_method", processPaymentRequest.PaymentMethodSystemName),
+                new KeyValuePair<string, object?>("status", status));
         }
     }
 
