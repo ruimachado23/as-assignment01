@@ -1,0 +1,46 @@
+Why the error/failure dashboard panels had no data before simulated failures
+============================================================================
+
+The three custom metrics are correctly instrumented in the application code,
+but the load test scenario (virtual gift card + CheckMoneyOrder payment) could
+never trigger the failure code paths. Here is why for each:
+
+1. Order Error Rate
+   - The `status="failure"` tag is only recorded inside PlaceOrderAsync
+     (OrderProcessingService.cs) when the internal placeOrder() call returns
+     Success = false.
+   - With the CheckMoneyOrder plugin, payment always succeeds, so every order
+     completed successfully → always status="success" → the PromQL ratio
+     (failure / total) returned no data.
+
+2. Payment Failure Rate
+   - The `status="failure"` tag on the PaymentGatewayDuration histogram is
+     only set when ProcessPaymentAsync (PaymentService.cs) throws an exception.
+   - CheckMoneyOrder simply records a pending payment without calling any
+     external gateway — it never throws → always status="success" → no
+     failure data.
+
+3. Inventory Adjustment Failures
+   - This counter only increments when AdjustInventoryAsync
+     (ProductService.cs) catches an exception (e.g., NopException for
+     out-of-stock).
+   - The $25 Virtual Gift Card does not have inventory management enabled
+     (ManageInventoryMethod != ManageStock), so the inventory adjustment code
+     is skipped entirely → the counter never increments → no data at all.
+
+Solution: Simulated Failures
+----------------------------
+To populate all dashboard panels during load testing, we added simulated
+failures controlled by the environment variable OTEL_SIMULATED_FAILURE_RATE
+(set to 0.15 = 15% in docker-compose.yml):
+
+- PaymentService.cs: throws a simulated gateway timeout at ~15% rate,
+  which records status="failure" on both the payment and order metrics
+  (the payment exception cascades into a failed order).
+
+- ProductService.cs: throws a simulated out-of-stock NopException at ~7.5%
+  rate (half the configured rate), which increments the inventory adjustment
+  failures counter with reason="out_of_stock".
+
+Setting OTEL_SIMULATED_FAILURE_RATE=0 (or removing it) restores normal
+behaviour with zero simulated errors.

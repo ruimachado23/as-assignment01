@@ -1711,6 +1711,13 @@ public partial class ProductService : IProductService
 
         try
         {
+        // Simulated inventory failure for load-testing observability
+        var simulatedFailureRate = Environment.GetEnvironmentVariable("OTEL_SIMULATED_FAILURE_RATE");
+        if (!string.IsNullOrEmpty(simulatedFailureRate)
+            && double.TryParse(simulatedFailureRate, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var failRate)
+            && Random.Shared.NextDouble() < failRate * 0.5)
+            throw new NopException("Simulated out-of-stock condition (load-test)");
+
 
         if (product.ManageInventoryMethod == ManageInventoryMethod.ManageStock)
         {

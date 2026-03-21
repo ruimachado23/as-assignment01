@@ -79,6 +79,13 @@ public partial class PaymentService : IPaymentService
                                     .LoadPluginBySystemNameAsync(processPaymentRequest.PaymentMethodSystemName, customer, processPaymentRequest.StoreId)
                                 ?? throw new NopException("Payment method couldn't be loaded");
 
+            // Simulated payment failure for load-testing observability
+            var simulatedFailureRate = Environment.GetEnvironmentVariable("OTEL_SIMULATED_FAILURE_RATE");
+            if (!string.IsNullOrEmpty(simulatedFailureRate)
+                && double.TryParse(simulatedFailureRate, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var failRate)
+                && Random.Shared.NextDouble() < failRate)
+                throw new NopException("Simulated payment gateway timeout (load-test)");
+
             return await paymentMethod.ProcessPaymentAsync(processPaymentRequest);
         }
         catch

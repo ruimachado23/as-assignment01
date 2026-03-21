@@ -4,15 +4,24 @@ services:
         container_name: nopcommerce
         ports:
             - "80:80"
+        environment:
+            - ASPNETCORE_URLS=http://+:80
+            - OpenTelemetry__OtlpEndpoint=http://jaeger:4317
+            - OTEL_SIMULATED_FAILURE_RATE=0.15
+        volumes:
+            - ./src/Presentation/Nop.Web/App_Data:/app/App_Data
         depends_on:
             - nopcommerce_database
     nopcommerce_database:
-        image: "mcr.microsoft.com/mssql/server:2019-latest"
-        container_name: nopcommerce_mssql_server
+        image: mysql:8.0
+        container_name: nopcommerce_mysql
+        ports:
+            - "3307:3306"
         environment:
-            SA_PASSWORD: "nopCommerce_db_password"
-            ACCEPT_EULA: "Y"
-            MSSQL_PID: "Express"
+            MYSQL_ROOT_PASSWORD: teste123
+            MYSQL_DATABASE: nopcommerce
+        volumes:
+            - nopcommerce_data:/var/lib/mysql
 
 volumes:
-  nopcommerce_data:            
+  nopcommerce_data:

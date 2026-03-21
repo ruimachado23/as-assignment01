@@ -275,19 +275,29 @@
     },
     {
       "id": 7,
-      "type": "traces",
-      "title": "Trace Explorer",
+      "type": "table",
+      "title": "Trace Explorer – Recent Order Traces",
       "datasource": { "type": "jaeger", "uid": "jaeger" },
       "gridPos": { "h": 8, "w": 24, "x": 0, "y": 15 },
       "targets": [
         {
           "refId": "A",
+          "datasource": { "type": "jaeger", "uid": "jaeger" },
           "queryType": "search",
           "service": "NopCommerce",
-          "operation": "PlaceOrder"
+          "operation": "PlaceOrder",
+          "limit": 20
         }
       ],
-      "options": {}
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "transformations": []
     }
   ]
 }
