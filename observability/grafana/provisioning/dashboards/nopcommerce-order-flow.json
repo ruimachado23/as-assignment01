@@ -1,0 +1,293 @@
+{
+  "id": null,
+  "uid": "nopcommerce-order-flow",
+  "title": "nopCommerce – Order Flow (RED)",
+  "tags": ["nopcommerce", "orders", "RED"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "type": "row",
+      "title": "Rate & Duration",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Order Throughput (orders/min)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 1 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(nopcommerce_order_processing_duration_milliseconds_count[5m])) * 60",
+          "legendFormat": "orders/min"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 50 },
+              { "color": "red", "value": 100 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Order Processing Duration (p50 / p95 / p99)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 9, "x": 6, "y": 1 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.50, sum by(le) (rate(nopcommerce_order_processing_duration_milliseconds_bucket[5m])))",
+          "legendFormat": "p50"
+        },
+        {
+          "refId": "B",
+          "expr": "histogram_quantile(0.95, sum by(le) (rate(nopcommerce_order_processing_duration_milliseconds_bucket[5m])))",
+          "legendFormat": "p95"
+        },
+        {
+          "refId": "C",
+          "expr": "histogram_quantile(0.99, sum by(le) (rate(nopcommerce_order_processing_duration_milliseconds_bucket[5m])))",
+          "legendFormat": "p99"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": true,
+            "drawStyle": "line",
+            "pointSize": 5,
+            "showPoints": "auto"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "desc" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      }
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Payment Gateway Duration (p50 / p95 / p99)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 9, "x": 15, "y": 1 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.50, sum by(le) (rate(nopcommerce_payment_gateway_duration_milliseconds_bucket[5m])))",
+          "legendFormat": "p50"
+        },
+        {
+          "refId": "B",
+          "expr": "histogram_quantile(0.95, sum by(le) (rate(nopcommerce_payment_gateway_duration_milliseconds_bucket[5m])))",
+          "legendFormat": "p95"
+        },
+        {
+          "refId": "C",
+          "expr": "histogram_quantile(0.99, sum by(le) (rate(nopcommerce_payment_gateway_duration_milliseconds_bucket[5m])))",
+          "legendFormat": "p99"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": true,
+            "drawStyle": "line",
+            "pointSize": 5,
+            "showPoints": "auto"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "desc" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      }
+    },
+    {
+      "type": "row",
+      "title": "Errors",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 7 },
+      "id": 101,
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Order Error Rate (%)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 10, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(nopcommerce_order_processing_duration_milliseconds_count{status=\"failure\"}[5m])) / sum(rate(nopcommerce_order_processing_duration_milliseconds_count[5m])) * 100",
+          "legendFormat": "error rate %"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": true,
+            "drawStyle": "line",
+            "pointSize": 5,
+            "showPoints": "auto"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "red", "value": 10 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": { "mode": "single" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Payment Failure Rate (%)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 6, "x": 10, "y": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(nopcommerce_payment_gateway_duration_milliseconds_count{status=\"failure\"}[5m])) / sum(rate(nopcommerce_payment_gateway_duration_milliseconds_count[5m])) * 100",
+          "legendFormat": "failure rate %"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 5 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Inventory Adjustment Failures",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by(reason) (rate(nopcommerce_inventory_adjustment_failures_total[5m]))",
+          "legendFormat": "{{ reason }}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": true,
+            "drawStyle": "line",
+            "pointSize": 5,
+            "showPoints": "auto"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "desc" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      }
+    },
+    {
+      "type": "row",
+      "title": "Traces",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+      "id": 102,
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 7,
+      "type": "traces",
+      "title": "Trace Explorer",
+      "datasource": { "type": "jaeger", "uid": "jaeger" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 15 },
+      "targets": [
+        {
+          "refId": "A",
+          "queryType": "search",
+          "service": "NopCommerce",
+          "operation": "PlaceOrder"
+        }
+      ],
+      "options": {}
+    }
+  ]
+}

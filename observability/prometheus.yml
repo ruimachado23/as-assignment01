@@ -7,4 +7,4 @@ scrape_configs:
     # When running locally: host.docker.internal:5000
     # When running in Docker alongside the app: nopcommerce:8080
     static_configs:
-      - targets: ["host.docker.internal:5000"]
+      - targets: ["nopcommerce:80"]

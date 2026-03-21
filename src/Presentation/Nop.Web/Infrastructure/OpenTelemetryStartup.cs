@@ -33,13 +33,13 @@ public partial class OpenTelemetryStartup : INopStartup
                 metrics
                     .AddAspNetCoreInstrumentation()
                     .AddMeter(NopCommerceDiagnostics.ServiceName)
-                    .AddOtlpExporter(opts => opts.Endpoint = new Uri(otlpEndpoint));
+                    .AddPrometheusExporter();
             });
     }
 
     public void Configure(IApplicationBuilder application)
     {
-        // No middleware to add
+        application.UseOpenTelemetryPrometheusScrapingEndpoint();
     }
 
     /// <summary>
