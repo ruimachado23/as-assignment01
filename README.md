@@ -1,4 +1,4 @@
-﻿﻿# nopCommerce — Observability & Instrumentation
+﻿﻿# nopCommerce - as assignment 01
 
 OpenTelemetry-based observability for the nopCommerce order flow, with distributed tracing (Jaeger), metrics (Prometheus), and dashboards (Grafana).
 
