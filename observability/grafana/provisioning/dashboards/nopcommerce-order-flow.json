@@ -13,19 +13,70 @@
   },
   "panels": [
     {
+      "id": 10,
+      "type": "text",
+      "title": "",
+      "datasource": null,
+      "gridPos": { "h": 2, "w": 24, "x": 0, "y": 0 },
+      "options": {
+        "mode": "markdown",
+        "content": "### Order Flow Observability\nMonitors the nopCommerce order placement pipeline — from checkout request through payment and persistence. **~15% of payments are intentionally failed** via `OTEL_SIMULATED_FAILURE_RATE` for observability testing. Error rates above this threshold indicate a real issue.",
+        "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false }
+      }
+    },
+    {
       "type": "row",
       "title": "Rate & Duration",
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 2 },
       "id": 100,
       "collapsed": false,
       "panels": []
+    },
+    {
+      "id": 11,
+      "type": "stat",
+      "title": "Successful Orders",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 3, "x": 0, "y": 3 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(increase(nopcommerce_order_processing_duration_milliseconds_count{status=\"success\"}[30m]))",
+          "legendFormat": "orders"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": { "mode": "fixed", "fixedColor": "green" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "auto"
+      }
     },
     {
       "id": 1,
       "type": "stat",
       "title": "Order Throughput (orders/min)",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 1 },
+      "gridPos": { "h": 6, "w": 3, "x": 3, "y": 3 },
       "targets": [
         {
           "refId": "A",
@@ -65,7 +116,7 @@
       "type": "timeseries",
       "title": "Order Processing Duration (p50 / p95 / p99)",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 6, "w": 9, "x": 6, "y": 1 },
+      "gridPos": { "h": 6, "w": 9, "x": 6, "y": 3 },
       "targets": [
         {
           "refId": "A",
@@ -107,7 +158,7 @@
       "type": "timeseries",
       "title": "Payment Gateway Duration (p50 / p95 / p99)",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 6, "w": 9, "x": 15, "y": 1 },
+      "gridPos": { "h": 6, "w": 9, "x": 15, "y": 3 },
       "targets": [
         {
           "refId": "A",
@@ -147,7 +198,7 @@
     {
       "type": "row",
       "title": "Errors",
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 7 },
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 9 },
       "id": 101,
       "collapsed": false,
       "panels": []
@@ -157,7 +208,7 @@
       "type": "timeseries",
       "title": "Order Error Rate (%)",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 6, "w": 10, "x": 0, "y": 8 },
+      "gridPos": { "h": 6, "w": 10, "x": 0, "y": 10 },
       "targets": [
         {
           "refId": "A",
@@ -198,7 +249,7 @@
       "type": "stat",
       "title": "Payment Failure Rate (%)",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 6, "w": 6, "x": 10, "y": 8 },
+      "gridPos": { "h": 6, "w": 6, "x": 10, "y": 10 },
       "targets": [
         {
           "refId": "A",
@@ -238,7 +289,7 @@
       "type": "timeseries",
       "title": "Inventory Adjustment Failures",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 8 },
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 10 },
       "targets": [
         {
           "refId": "A",
@@ -268,7 +319,7 @@
     {
       "type": "row",
       "title": "Traces",
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 16 },
       "id": 102,
       "collapsed": false,
       "panels": []
@@ -278,7 +329,7 @@
       "type": "table",
       "title": "Trace Explorer – Recent Order Traces",
       "datasource": { "type": "jaeger", "uid": "jaeger" },
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 15 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 17 },
       "targets": [
         {
           "refId": "A",
@@ -286,6 +337,33 @@
           "queryType": "search",
           "service": "NopCommerce",
           "operation": "PlaceOrder",
+          "limit": 20
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "transformations": []
+    },
+    {
+      "id": 12,
+      "type": "table",
+      "title": "Error Traces – Failed Orders",
+      "datasource": { "type": "jaeger", "uid": "jaeger" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 17 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "jaeger", "uid": "jaeger" },
+          "queryType": "search",
+          "service": "NopCommerce",
+          "operation": "PlaceOrder",
+          "tags": "status=failure",
           "limit": 20
         }
       ],

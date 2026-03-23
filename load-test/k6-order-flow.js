@@ -17,8 +17,8 @@ export const options = {
   stages: [
     { duration: '30s',  target: 5  },   // warm-up
     { duration: '2m',   target: 5  },   // steady state
-    { duration: '30s',  target: 10 },   // stress increase
-    { duration: '1m',   target: 10 },   // peak load
+    { duration: '30s',  target: 15 },   // stress increase
+    { duration: '1m',   target: 15 },   // peak load
     { duration: '30s',  target: 0  },   // cool-down
   ],
   thresholds: {

@@ -1,0 +1,14 @@
+flowchart TD
+    A["HTTP Request"] --> B["ASP.NET Core<br/>(auto-instrumented)"]
+    B --> C["OrderProcessingService<br/>PlaceOrderAsync<br/>(span + histogram)"]
+    C --> D["PreparePlaceOrderDetailsAsync<br/>(span)"]
+    C --> E["PaymentService<br/>ProcessPaymentAsync<br/>(span + histogram)"]
+    E --> F["Payment Plugin<br/>(opaque)"]
+    C --> G["SaveOrderDetailsAsync<br/>(span)"]
+    C --> H["MoveShoppingCartItemsToOrderItemsAsync<br/>(span + counter)"]
+
+    B --> I["PiiSanitisationProcessor<br/>(redacts before export)"]
+    I --> J["OTLP Export"]
+    J --> K["Jaeger<br/>(traces)"]
+    J --> L["Prometheus<br/>(metrics)"]
+    L --> M["Grafana<br/>(dashboards)"]
